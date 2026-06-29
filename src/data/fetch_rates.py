@@ -16,7 +16,7 @@ sys.path.append(str(PROJECT_ROOT / "src"))
 
 from database import init_db, save_rate, get_rate_count
 from feeds import pi42_client, delta_client
-from detection import compare
+from detection import compare, opportunity
 
 # ── LOGGING ──────────────────────────────────────────────────
 # Operational events (connect/disconnect/errors) are timestamped and saved
@@ -106,11 +106,18 @@ def display():
 
         gap_info = compare.compute_gap(p, d)
         if gap_info:
+            opp = opportunity.assess(gap_info)
             print("-" * 52)
-            print(
-                f"  GAP    | {gap_info['higher_exchange']} is higher by "
-                f"{abs(gap_info['gap_pct']):.6f} percentage points"
-            )
+            print(f"  GAP    | {gap_info['higher_exchange']} is higher by {abs(gap_info['gap_pct']):.6f} pp")
+            if opp:
+                net = opp['gap_pct'] - opp['round_trip_fee_pct']
+                profitable = net > 0
+                print(f"  FEES   | {opp['round_trip_fee_pct']:.4f}% round trip (taker + GST)")
+                if profitable:
+                    print(f"  NET    | +{net:.4f}% ✅ PROFITABLE")
+                    print(f"  BRKEVN | {opp['breakeven_payouts']:.1f} payouts (~{opp['breakeven_hours']:.1f} hrs)")
+                else:
+                    print(f"  NET    | {net:.4f}% ❌ NOT profitable after fees")
     print("=" * 52)
 
 
