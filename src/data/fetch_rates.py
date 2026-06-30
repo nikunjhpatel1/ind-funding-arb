@@ -17,6 +17,7 @@ sys.path.append(str(PROJECT_ROOT / "src"))
 from database import init_db, save_rate, get_rate_count
 from feeds import pi42_client, delta_client
 from detection import compare, opportunity
+from alerts.telegram import send_opportunity_alert
 
 # ── LOGGING ──────────────────────────────────────────────────
 # Operational events (connect/disconnect/errors) are timestamped and saved
@@ -53,6 +54,8 @@ PAIRS = [
 # loop only ever READS from it. Safe without locks since everything runs
 # in one asyncio event loop (cooperative, not real threads).
 latest = {}
+last_alert_time = None   # Track when we last sent a Telegram alert
+ALERT_COOLDOWN_MINUTES = 30  # Don't spam — max 1 alert per 30 minutes
 
 
 def update_latest(exchange, symbol, mark_price=None, funding_rate=None):
@@ -116,6 +119,20 @@ def display():
                 if profitable:
                     print(f"  NET    | +{net:.4f}% ✅ PROFITABLE")
                     print(f"  BRKEVN | {opp['breakeven_payouts']:.1f} payouts (~{opp['breakeven_hours']:.1f} hrs)")
+                    # ── TELEGRAM ALERT (max once per 30 minutes) ──
+                    global last_alert_time
+                    now = datetime.now()
+                    if (last_alert_time is None or
+                            (now - last_alert_time).total_seconds() > ALERT_COOLDOWN_MINUTES * 60):
+                        send_opportunity_alert(
+                            gap_pct=gap_info['gap_pct'],
+                            net_pct=net,
+                            breakeven_hrs=opp['breakeven_hours'],
+                            delta_rate=d.get('funding_rate', 0),
+                            pi42_rate=p.get('funding_rate', 0) if p else 0,
+                        )
+                        last_alert_time = now
+                        print(f"  📱 Alert sent to Telegram")
                 else:
                     print(f"  NET    | {net:.4f}% ❌ NOT profitable after fees")
     print("=" * 52)

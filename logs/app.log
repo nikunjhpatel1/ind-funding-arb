@@ -38,3 +38,9 @@ ing in 20s...
 2026-06-29 13:56:32,918 [INFO] [delta_client] connected
 2026-06-29 13:56:34,179 [WARNING] [pi42_client] connection error: timed out during opening handshake. Reconnecting in 5s...
 2026-06-29 13:56:46,932 [INFO] [pi42_client] connected
+2026-06-29 22:43:11,865 [INFO] [fetch_rates] Starting funding rate streamer (real-time WebSocket mode)
+2026-06-29 22:43:12,392 [INFO] [pi42_client] connected
+2026-06-29 22:43:12,747 [INFO] [delta_client] connected
+2026-06-29 22:43:56,280 [INFO] [fetch_rates] Starting funding rate streamer (real-time WebSocket mode)
+2026-06-29 22:43:56,886 [INFO] [pi42_client] connected
+2026-06-29 22:43:56,995 [INFO] [delta_client] connected
